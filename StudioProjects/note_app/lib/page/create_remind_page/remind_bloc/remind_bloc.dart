@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:meta/meta.dart';
 
 import '../../../core/configs/app_alerts.dart';
+import '../../../core/helper/format.dart';
 import '../../../core/helper/sql_helper.dart';
 import '../../../core/services.dart';
 import '../../../data/model/note_model.dart';
+import '../../main_page/main_page.dart';
 
 part 'remind_event.dart';
 part 'remind_state.dart';
@@ -22,6 +25,7 @@ class RemindBloc extends Bloc<RemindEvent, RemindState> {
     on<AddRemind>(_onAddRemind);
     on<UpdateRemind>(_onUpdateRemind);
     on<DeleteRemind>(_onDeleteRemind);
+    on<ClickAddRemind>(_onClickAddRemind);
   }
   final dbHelper = DbHelper();
   final notifyService = NotificationService();
@@ -75,6 +79,7 @@ class RemindBloc extends Bloc<RemindEvent, RemindState> {
           selectedDate:
               selectedDateTime.copyWith(hour: time.hour, minute: time.minute)));
     }else{
+
       AppAlerts.displaySnackbar(event.context, "Vui lòng chọn giờ sau thời gian hiện tại để hiển thị thông báo cho nhắc nhở!");
     }
   }
@@ -137,4 +142,39 @@ class RemindBloc extends Bloc<RemindEvent, RemindState> {
 
   Future<List<NoteModel>> getListReminds() async =>
       await dbHelper.getAllReminds();
+
+  _onClickAddRemind(
+      ClickAddRemind event, Emitter<RemindState> emitter) async {
+
+    if (event.formKey.currentState!.validate()) {
+    var dateSelected = state.selectedDate;
+    var timeSelected = state.selectedTime;
+    if (dateSelected == null) {
+    AppAlerts.displaySnackbar(event.context,
+    "Vui lòng chọn ngày tháng để hiển thị thông báo cho nhắc nhở!");
+    } else if (timeSelected == null) {
+    AppAlerts.displaySnackbar(event.context,
+    "Vui lòng chọn giờ để hiển thị thông báo cho nhắc nhở!");
+    } else {
+    createRemind(dateSelected, event.context,event.title,event.note);
+    }
+    }
+  }
+
+
+
+  void createRemind(DateTime dateSelected, BuildContext context,String title,String note) {
+    var noteModel = NoteModel(
+        title: StringFormat.capitalizedString(
+            title),
+        note: StringFormat.capitalizedString(
+            note),
+        date: StringFormat.dateFormatter(dateSelected));
+    context.read<RemindBloc>().add(AddRemind(remindModel: noteModel));
+    AppAlerts.displaySnackbar(context, "Tạo ghi chú thành công.");
+    Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const MainPage()),
+            (Route route) => false);
+  }
 }

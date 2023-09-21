@@ -4,6 +4,7 @@ class SizeConfig {
   static const double sizeWidthDesign=375;
   static const double sizeHeightDesign=812;
 
+
   static Size displaySize(BuildContext context) {
     debugPrint('Size = ${MediaQuery.of(context).size}');
     return MediaQuery.of(context).size;
