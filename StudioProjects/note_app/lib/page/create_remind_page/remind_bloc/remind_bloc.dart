@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:meta/meta.dart';
 
 import '../../../core/configs/app_alerts.dart';
-import '../../../core/helper/sql_helper.dart';
+import '../../../core/helper/format.dart';
+
 import '../../../core/services.dart';
 import '../../../data/model/note_model.dart';
+import '../../../respository/res_impl/reminds.dart';
+import '../../main_page/main_page.dart';
 
 part 'remind_event.dart';
 part 'remind_state.dart';
@@ -22,8 +24,9 @@ class RemindBloc extends Bloc<RemindEvent, RemindState> {
     on<AddRemind>(_onAddRemind);
     on<UpdateRemind>(_onUpdateRemind);
     on<DeleteRemind>(_onDeleteRemind);
+    on<ClickAddRemind>(_onClickAddRemind);
   }
-  final dbHelper = DbHelper();
+  final remindsResponsitory = RemindsImpl();
   final notifyService = NotificationService();
   _onDateChange(DateChange event, Emitter<RemindState> emitter) async {
     DateTime? dateTime = await showDatePicker(
@@ -50,7 +53,6 @@ class RemindBloc extends Bloc<RemindEvent, RemindState> {
       //   );
       // },
     );
-    print(state.selectedDate.runtimeType);
 
     if (dateTime != null) {
       emitter(RemindState().copyWith(
@@ -64,18 +66,19 @@ class RemindBloc extends Bloc<RemindEvent, RemindState> {
       context: event.context,
       initialTime: TimeOfDay.now(),
     );
-    double _doubleyourTime =
-        time!.hour.toDouble() + (time.minute.toDouble() /60);
-     double _doubleNowTime = TimeOfDay.now().hour.toDouble() +
+    double doubleYourTime =
+        time!.hour.toDouble() + (time.minute.toDouble() / 60);
+    double doubleNowTime = TimeOfDay.now().hour.toDouble() +
         (TimeOfDay.now().minute.toDouble() / 60);
-    if (time != null && _doubleNowTime<_doubleyourTime) {
+    if (doubleNowTime < doubleYourTime) {
       DateTime selectedDateTime = state.selectedDate ?? DateTime.now();
       emitter(RemindState(
           selectedTime: time,
           selectedDate:
               selectedDateTime.copyWith(hour: time.hour, minute: time.minute)));
-    }else{
-      AppAlerts.displaySnackbar(event.context, "Vui lòng chọn giờ sau thời gian hiện tại để hiển thị thông báo cho nhắc nhở!");
+    } else {
+      showSnackBar(event.context,
+          "Vui lòng chọn giờ sau thời gian hiện tại để hiển thị thông báo cho nhắc nhở!");
     }
   }
 
@@ -91,18 +94,18 @@ class RemindBloc extends Bloc<RemindEvent, RemindState> {
 
   Future<void> _onUpdateRemind(
       UpdateRemind event, Emitter<RemindState> emitter) async {
-    await dbHelper.updateRemind(event.remindModel);
+    await remindsResponsitory.updateReminds(event.remindModel);
     final listReminds = await getListReminds();
     emitter(RemindState().copyWith(
         remindStatus: RemindStatus.update,
         remindGetStatus: RemindGetStatus.success,
         listReminds: listReminds));
-    // _onFetchReminds;
+
   }
 
   Future<void> _onAddRemind(
       AddRemind event, Emitter<RemindState> emitter) async {
-    await dbHelper.addRemind(event.remindModel);
+    await remindsResponsitory.insertReminds(event.remindModel);
     final listReminds = await getListReminds();
     emitter(RemindState().copyWith(
         remindStatus: RemindStatus.add,
@@ -124,7 +127,7 @@ class RemindBloc extends Bloc<RemindEvent, RemindState> {
 
   Future<void> _onDeleteRemind(
       DeleteRemind event, Emitter<RemindState> emitter) async {
-    await dbHelper.deleteRemind(event.remindModel);
+    await remindsResponsitory.deleteReminds(event.remindModel);
     final listReminds = await getListReminds();
     emitter(RemindState().copyWith(
         remindStatus: RemindStatus.delete,
@@ -136,5 +139,39 @@ class RemindBloc extends Bloc<RemindEvent, RemindState> {
   }
 
   Future<List<NoteModel>> getListReminds() async =>
-      await dbHelper.getAllReminds();
+      remindsResponsitory.loadReminds();
+
+  _onClickAddRemind(ClickAddRemind event, Emitter<RemindState> emitter) async {
+    if (event.formKey.currentState!.validate()) {
+      var dateSelected = state.selectedDate;
+      var timeSelected = state.selectedTime;
+      if (dateSelected == null) {
+        showSnackBar(event.context,
+            "Vui lòng chọn ngày tháng để hiển thị thông báo cho nhắc nhở!");
+      } else if (timeSelected == null) {
+        showSnackBar(event.context,
+            "Vui lòng chọn giờ để hiển thị thông báo cho nhắc nhở!");
+      } else {
+        createRemind(dateSelected, event.context, event.title, event.note);
+      }
+    }
+  }
+
+  void showSnackBar(BuildContext context, String title) {
+    AppAlerts.displaySnackbar(context, title);
+  }
+
+  void createRemind(
+      DateTime dateSelected, BuildContext context, String title, String note) {
+    var noteModel = NoteModel(
+        title: StringFormat.capitalizedString(title),
+        note: StringFormat.capitalizedString(note),
+        date: StringFormat.dateFormatter(dateSelected));
+    context.read<RemindBloc>().add(AddRemind(remindModel: noteModel));
+    AppAlerts.displaySnackbar(context, "Tạo ghi chú thành công.");
+    Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const MainPage()),
+        (Route route) => false);
+  }
 }

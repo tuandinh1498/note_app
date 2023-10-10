@@ -1,7 +1,5 @@
 import 'package:sqflite/sqflite.dart';
-// import 'dart:io' as io;
 import 'package:path/path.dart';
-
 import '../../data/model/note_model.dart';
 import '../const/db_key.dart';
 
@@ -10,7 +8,7 @@ class DbHelper {
 
   static Database? _database;
 
-  Future<Database> get database async {
+   Future<Database> get database async {
     _database ??= await _initDb();
     return _database!;
   }
@@ -98,6 +96,7 @@ class DbHelper {
       },
     );
   }
+
 
   Future<int> addRemind(NoteModel task) async {
     final db = await database;

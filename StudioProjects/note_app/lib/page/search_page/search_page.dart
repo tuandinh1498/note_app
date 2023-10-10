@@ -3,9 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:note_app/core/configs/app_alerts.dart';
 import 'package:note_app/data/model/note_model.dart';
 import 'package:note_app/page/detail_note/detail_note.dart';
-
-import '../../core/services.dart';
-import '../create_remind_page/create_remind_page.dart';
 import 'bloc/search_bloc.dart';
 
 class SearchPage extends StatefulWidget {

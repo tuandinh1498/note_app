@@ -31,6 +31,14 @@ class AddRemind extends RemindEvent{
   const AddRemind({required this.remindModel});
 }
 
+class ClickAddRemind extends RemindEvent{
+  final BuildContext context;
+  final GlobalKey<FormState> formKey;
+  final String title;
+  final String note;
+   const ClickAddRemind({required this.context,required this.formKey,required this.title,required this.note});
+}
+
 class DeleteRemind extends RemindEvent{
   final NoteModel remindModel;
   const DeleteRemind({required this.remindModel});

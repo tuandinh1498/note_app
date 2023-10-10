@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:note_app/page/create_remind_page/remind_bloc/remind_bloc.dart';
-
-import '../../core/configs/app_alerts.dart';
 import '../../core/configs/hide_keyboard.dart';
 import '../../core/configs/validations.dart';
 import '../../core/helper/format.dart';
-import '../../data/model/note_model.dart';
-import '../main_page/main_page.dart';
+
 
 class RemindPage extends StatefulWidget {
   const RemindPage({Key? key}) : super(key: key);
@@ -33,15 +30,6 @@ class _RemindPageState extends State<RemindPage> {
       appBar: AppBar(
         title: const Text("Tạo nhắc nhở."),
         actions: [
-// IconButton(
-//   onPressed: () {
-//     Navigator.pop(context);
-//   },
-//   icon: const Icon(
-//     Icons.edit_outlined,
-//     color: Colors.black,
-//   ),
-// ),
         ],
       ),
       body: GestureDetector(
@@ -98,7 +86,7 @@ class _RemindPageState extends State<RemindPage> {
                       child: Text('Chọn ngày',
                           style: Theme.of(context).textTheme.displayMedium),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     state.selectedTime == null
                         ? const Text("Vui lòng chọn giờ ")
                         : Text(
@@ -111,7 +99,7 @@ class _RemindPageState extends State<RemindPage> {
                       child: Text('Chọn giờ',
                           style: Theme.of(context).textTheme.displayMedium),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                   ],
                 );
               },
@@ -123,19 +111,13 @@ class _RemindPageState extends State<RemindPage> {
         margin: const EdgeInsets.all(5),
         child: OutlinedButton(
           onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              var dateSelected = context.read<RemindBloc>().state.selectedDate;
-              var timeSelected = context.read<RemindBloc>().state.selectedTime;
-              if (dateSelected == null) {
-                AppAlerts.displaySnackbar(context,
-                    "Vui lòng chọn ngày tháng để hiển thị thông báo cho nhắc nhở!");
-              } else if (timeSelected == null) {
-                AppAlerts.displaySnackbar(context,
-                    "Vui lòng chọn giờ để hiển thị thông báo cho nhắc nhở!");
-              } else {
-                createRemind(dateSelected, context);
-              }
-            }
+            context.read<RemindBloc>().add(ClickAddRemind(
+                context: context,
+                formKey: _formKey,
+                title: _titleController.text.trim(),
+                note: _contentController.text.trim()));
+
+
           },
           child: Text("Lưu",
               style: Theme.of(context)
@@ -147,20 +129,6 @@ class _RemindPageState extends State<RemindPage> {
     );
   }
 
-  void createRemind(DateTime dateSelected, BuildContext context) {
-    var note = NoteModel(
-        title: StringFormat.capitalizedString(
-            _titleController.text.trim()),
-        note: StringFormat.capitalizedString(
-            _contentController.text.trim()),
-        date: StringFormat.dateFormatter(dateSelected!));
-    context.read<RemindBloc>().add(AddRemind(remindModel: note));
-    AppAlerts.displaySnackbar(context, "Tạo ghi chú thành công.");
-    Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const MainPage()),
-        (Route route) => false);
-  }
 
   Widget customTextFormField(
       {String? hintText,

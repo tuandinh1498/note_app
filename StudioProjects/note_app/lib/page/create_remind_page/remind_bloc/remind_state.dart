@@ -42,9 +42,9 @@ class RemindState extends Equatable {
     final List<NoteModel>? listReminds,
   }) {
     return RemindState(
-      selectedDate: selectedDate ?? this.selectedDate,
       selectedTime: selectedTime ?? this.selectedTime,
-      datePickerState: datePickerState ?? this.datePickerState,
+        selectedDate: selectedDate ?? this.selectedDate,
+        datePickerState: datePickerState ?? this.datePickerState,
       timePickerState: timePickerState ?? this.timePickerState,
       remindGetStatus: remindGetStatus ?? this.remindGetStatus,
       remindStatus: remindStatus ?? this.remindStatus,

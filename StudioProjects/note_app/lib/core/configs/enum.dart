@@ -1,1 +1,2 @@
 enum PageEnum{remindPage,notePage}
+
