@@ -6,6 +6,7 @@ import 'package:meta/meta.dart';
 
 import '../../../core/helper/sql_helper.dart';
 import '../../../data/model/note_model.dart';
+import '../../../respository/res_impl/task.dart';
 
 part 'home_event.dart';
 part 'home_state.dart';
@@ -18,7 +19,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<DeleteNote>(_onDeleteTask);
   }
 
-  var dbHelper = DbHelper();
+  final taskResponsitory = TaskImpl();
 
   Future<void> _onFetchNote(
       FetchEvent event,
@@ -26,18 +27,20 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       ) async{
 
     emitter(const HomeState().copyWith(homeStatus: HomeStatus.initial));
-    final listTasks = await dbHelper.getAllTasks();
+    final listTasks = await loadTasks();
     // listTasks.forEach((element) { print(element.id);});
     // print(listTasks.first.toJson());
     emitter(const HomeState().copyWith(homeStatus: HomeStatus.success,listNote: listTasks));
   }
 
+  Future<List<NoteModel>> loadTasks() => taskResponsitory.loadTasks();
+
   Future<void> _onUpdateTask (
       UpdateNote event,
       Emitter<HomeState> emitter
       )async{
-    await dbHelper.updateTask(event.noteModel);
-    final listTasks = await dbHelper.getAllTasks();
+    await taskResponsitory.updateTask(event.noteModel);
+    final listTasks = await loadTasks();
     emitter(const HomeState().copyWith(noteStatus: NoteStatus.update,homeStatus: HomeStatus.success,listNote: listTasks));
   }
 
@@ -45,8 +48,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       AddNote event,
       Emitter<HomeState> emitter
       )async{
-    await dbHelper.addTask(event.noteModel);
-    final listTasks = await dbHelper.getAllTasks();
+    await taskResponsitory.insertTask(event.noteModel);
+    final listTasks = await loadTasks();
     emitter(const HomeState().copyWith(noteStatus: NoteStatus.add,homeStatus: HomeStatus.success,listNote: listTasks));
   }
 
@@ -54,8 +57,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       DeleteNote event,
       Emitter<HomeState> emitter
       )async{
-    await dbHelper.deleteTask(event.noteModel);
-    final listTasks = await dbHelper.getAllTasks();
+    await taskResponsitory.deleteTask(event.noteModel);
+    final listTasks = await loadTasks();
     emitter(const HomeState().copyWith(noteStatus: NoteStatus.delete,homeStatus: HomeStatus.success,listNote: listTasks));
     _onFetchNote;
   }

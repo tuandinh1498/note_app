@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:note_app/core/helper/sql_helper.dart';
-import 'package:note_app/data/model/note_model.dart';
 import 'package:note_app/page/home_page/home_page.dart';
 import 'package:note_app/page/remind_list_page/remind_list_page.dart';
 import 'package:note_app/page/search_page/search_page.dart';
-
 import 'app_trigger/app_trigger__bloc.dart';
 
 
